@@ -1,11 +1,12 @@
 from typing import Optional
 from yarl import URL
-import LeverAdapter
+from adapters.lever_adapter import LeverAdapter
 
 
 class OpportunityAdapter:
-	def __init__(self, lever_adapter: LeverAdapter, endpoint_base_url="v1/opportunities"):
-		self.lever_adapter: LeverAdapter = lever_adapter
+	def __init__(self, api_key: str, endpoint_base_url="/opportunities"):
+		self._api_key = api_key
+		self.lever_adapter = LeverAdapter(base_url='https://api.lever.co/v1', api_key=self._api_key)
 		self.endpoint_base_url = endpoint_base_url
 
 	async def __aenter__(self) -> "OpportunityAdapter":
@@ -17,19 +18,20 @@ class OpportunityAdapter:
 
 	async def get_opportunity(self, opportunity_id: str):
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/{opportunity_id}')
-		response = await self.lever_adapter.get_data_from_endpoint(url)
-		return response
+		return await self.lever_adapter.get_data_from_endpoint(url)
 
-	async def get_all_opportunities(self, opportunity_id: str, params: Optional[list[dict]] = None):
-		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/{opportunity_id}').with_query(
+	async def get_opportunities(self, limit: int):
+		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query({'limit': limit})
+		return await self.lever_adapter.get_data_from_endpoint(url)
+
+	async def get_all_opportunities(self, params: Optional[list[dict]] = None):
+		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query(
 			params)
-		response = await self.lever_adapter.get_all_data_from_endpoint(url)
-		return response
+		return await self.lever_adapter.get_all_data_from_endpoint(url)
 
 	async def get_deleted_opportunities(self, params: Optional[list[dict]] = None):
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/deleted').with_query(params)
-		response = await self.lever_adapter.get_all_data_from_endpoint(url)
-		return response
+		return await self.lever_adapter.get_all_data_from_endpoint(url)
 
 	async def create_opportunity(self, payload: dict, parse: bool = False, perform_as_posting_owner: bool = False):
 		params = {'perform_as': self.lever_adapter.automation_user_id}
@@ -37,9 +39,8 @@ class OpportunityAdapter:
 			params['parse'] = parse
 		if perform_as_posting_owner:
 			params['perform_as_posting_owner'] = perform_as_posting_owner
-		url = URL(self).with_path(f'{self.endpoint_base_url}').with_query(params)
-		ret = self.lever_adapter.post_data_to_endpoint(url, data=payload)
-		return ret
+		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query(params)
+		return await self.lever_adapter.post_data_to_endpoint(url, data=payload)
 
 	async def update_opportunity_stage(self, opportunity_id, stage):
 		json = {'stage': stage}
@@ -47,8 +48,7 @@ class OpportunityAdapter:
 		url = URL(
 			self.lever_adapter.base_url) \
 			.with_path(f'{self.endpoint_base_url}/{opportunity_id}/stage').with_query(params)
-		response = await self.lever_adapter.put_data_to_endpoint(url, body=json)
-		return response
+		return await self.lever_adapter.put_data_to_endpoint(url, body=json)
 
 	async def update_opportunity_archived_state(
 			self, opportunity_id, reason, clean_interviews=False, requisition_id=None
@@ -63,16 +63,14 @@ class OpportunityAdapter:
 		url = URL(
 			self.lever_adapter.base_url) \
 			.with_path(f'{self.endpoint_base_url}/{opportunity_id}/stage').with_query(params)
-		response = await self.lever_adapter.put_data_to_endpoint(url, body=json)
-		return response
+		return await self.lever_adapter.put_data_to_endpoint(url, body=json)
 
 	async def _update_opportunity(self, opportunity_id: str, endpoint: str, payload: dict):
 		params: dict = {'perform_as': self.lever_adapter.automation_user_id}
 		url = URL(
 			self.lever_adapter.base_url) \
 			.with_path(f'{self.endpoint_base_url}/{opportunity_id}/{endpoint}').with_query(params)
-		response = await self.lever_adapter.put_data_to_endpoint(url, body=payload)
-		return response
+		return await self.lever_adapter.put_data_to_endpoint(url, body=payload)
 
 	async def add_opportunity_links(self, opportunity_id, links: list):
 		json = {'links': links}
