@@ -1,12 +1,13 @@
 from typing import Optional
 from yarl import URL
 from adapters.lever_adapter import LeverAdapter
+from models.opportunity import Opportunity
 
 
 class OpportunityAdapter:
-	def __init__(self, api_key: str, endpoint_base_url="/opportunities"):
+	def __init__(self, api_key: str, endpoint_base_url="v1/opportunities"):
 		self._api_key = api_key
-		self.lever_adapter = LeverAdapter(base_url='https://api.lever.co/v1', api_key=self._api_key)
+		self.lever_adapter = LeverAdapter(base_url='https://api.lever.co', api_key=self._api_key)
 		self.endpoint_base_url = endpoint_base_url
 
 	async def __aenter__(self) -> "OpportunityAdapter":
@@ -16,22 +17,26 @@ class OpportunityAdapter:
 		await self.lever_adapter.session.close()
 		return None
 
-	async def get_opportunity(self, opportunity_id: str):
+	async def get_opportunity(self, opportunity_id: str) -> Opportunity:
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/{opportunity_id}')
-		return await self.lever_adapter.get_data_from_endpoint(url)
+		response = await self.lever_adapter.get_data_from_endpoint(url)
+		return Opportunity(response['data'])
 
-	async def get_opportunities(self, limit: int):
+	async def get_opportunities(self, limit: int) -> list[Opportunity]:
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query({'limit': limit})
-		return await self.lever_adapter.get_data_from_endpoint(url)
+		response = await self.lever_adapter.get_data_from_endpoint(url)
+		return [Opportunity.from_dict(opp) for opp in response['data']]
 
-	async def get_all_opportunities(self, params: Optional[list[dict]] = None):
+	async def get_all_opportunities(self, params: Optional[list[dict]] = None) -> list[Opportunity]:
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query(
 			params)
-		return await self.lever_adapter.get_all_data_from_endpoint(url)
+		result = await self.lever_adapter.get_all_data_from_endpoint(url)
+		return [Opportunity(opp) for opp in result]
 
 	async def get_deleted_opportunities(self, params: Optional[list[dict]] = None):
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/deleted').with_query(params)
-		return await self.lever_adapter.get_all_data_from_endpoint(url)
+		result = await self.lever_adapter.get_all_data_from_endpoint(url)
+		return [Opportunity(opp) for opp in result]
 
 	async def create_opportunity(self, payload: dict, parse: bool = False, perform_as_posting_owner: bool = False):
 		params = {'perform_as': self.lever_adapter.automation_user_id}
