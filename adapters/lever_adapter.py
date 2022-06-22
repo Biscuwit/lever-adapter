@@ -1,10 +1,11 @@
-from types import TracebackType
 import backoff
 import aiohttp
-import asyncio
 from aiohttp import BasicAuth
 from yarl import URL
-from typing import Optional, Type, Any
+from typing import Optional, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LeverAdapter:
@@ -12,7 +13,7 @@ class LeverAdapter:
         self.base_url: str = base_url
         self.api_key: str = api_key
         self.automation_user_id: Optional[str] = automation_user_id
-        self.session = aiohttp.ClientSession(auth=BasicAuth(self.api_key), raise_for_status=True)
+        self.session = LoggingClientSession(auth=BasicAuth(self.api_key), raise_for_status=True)
 
     async def __aenter__(self) -> "LeverAdapter":
         return self
@@ -31,7 +32,6 @@ class LeverAdapter:
         result = []
         while True:
             async with self.session.get(url) as response:
-                print(f'Making request with: {url}')
                 res = await response.json()
                 result += res['data']
                 if not res.get('hasNext'):
@@ -53,3 +53,9 @@ class LeverAdapter:
     async def delete_data_on_endpoint(self, url: URL):
         async with self.session.delete(url) as response:
             return await response.json()
+
+
+class LoggingClientSession(aiohttp.ClientSession):
+    async def _request(self, method, url, **kwargs):
+        logger.debug('Starting request: %s %r', method, url)
+        return await super()._request(method, url, **kwargs)
