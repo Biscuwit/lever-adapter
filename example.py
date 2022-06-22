@@ -16,9 +16,12 @@ api_key = os.environ.get('LEVER_API_KEY')
 async def main():
 	logger.info("Starting Example app")
 	async with OpportunityAdapter(api_key=api_key) as api:
-		opps: list[Opportunity] = await api.get_opportunities(limit=50)
-		for opp in opps:
-			logger.info(opp.name)
+		example_opp: Opportunity = await api.get_opportunity('ab4e3f06-94b0-41b6-a90e-752a1554acfb')
+		print(example_opp.name)
+
+		params = {'limit': 100, 'archived': 'false', 'stage_id': 'applicant-new'}
+		opps: list[Opportunity] = await api.get_all_opportunities(params)
+		print(len(opps))
 
 
 if __name__ == "__main__":
