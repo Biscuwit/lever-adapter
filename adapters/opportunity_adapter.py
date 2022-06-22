@@ -22,18 +22,18 @@ class OpportunityAdapter:
 	async def get_opportunity(self, opportunity_id: str) -> Opportunity:
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/{opportunity_id}')
 		response = await self.lever_adapter.get_data_from_endpoint(url)
-		return Opportunity(response['data'])
+		return Opportunity.from_dict(response['data'])
 
-	async def get_opportunities(self, limit: int) -> list[Opportunity]:
-		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query({'limit': limit})
+	async def get_opportunities(self, params: Optional[dict] = None) -> list[Opportunity]:
+		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query(params)
 		response = await self.lever_adapter.get_data_from_endpoint(url)
 		return [Opportunity.from_dict(opp) for opp in response['data']]
 
-	async def get_all_opportunities(self, params: Optional[list[dict]] = None) -> list[Opportunity]:
+	async def get_all_opportunities(self, params: Optional[dict] = None) -> list[Opportunity]:
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}').with_query(
 			params)
 		result = await self.lever_adapter.get_all_data_from_endpoint(url)
-		return [Opportunity(opp) for opp in result]
+		return [Opportunity.from_dict(opp) for opp in result]
 
 	async def get_deleted_opportunities(self, params: Optional[list[dict]] = None):
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/deleted').with_query(params)

@@ -18,8 +18,7 @@ class Opportunity:
 	emails: list[str]
 	links: list[str]
 	resume: Optional[bool]
-	archivedAt: Optional[int]
-	archiveReason: Optional[str]
+	archived: Optional[dict]
 	tags: list[str]
 	sources: list[str]
 	sourcedBy: Optional[str]
@@ -28,7 +27,7 @@ class Opportunity:
 	followers: list[str]
 	applications: list[str]
 	createdAt: int
-	updatedAt: int
+	updatedAt: Optional[int]
 	lastInteractionAt: int
 	lastAdvancedAt: int
 	snoozedUntil: Optional[int]
