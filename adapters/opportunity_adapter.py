@@ -1,5 +1,7 @@
 from typing import Optional
+
 from yarl import URL
+
 from adapters.lever_adapter import LeverAdapter
 from models.opportunity import Opportunity
 

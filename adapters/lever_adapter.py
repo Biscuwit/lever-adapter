@@ -1,9 +1,10 @@
-import backoff
+import logging
+from typing import Any, Optional
+
 import aiohttp
+import backoff
 from aiohttp import BasicAuth
 from yarl import URL
-from typing import Optional, Any
-import logging
 
 logger = logging.getLogger(__name__)
 
