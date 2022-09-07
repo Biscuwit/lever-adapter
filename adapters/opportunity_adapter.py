@@ -38,7 +38,7 @@ class OpportunityAdapter:
 	async def get_deleted_opportunities(self, params: Optional[list[dict]] = None):
 		url = URL(self.lever_adapter.base_url).with_path(f'{self.endpoint_base_url}/deleted').with_query(params)
 		result = await self.lever_adapter.get_all_data_from_endpoint(url)
-		return [Opportunity(opp) for opp in result]
+		return [Opportunity.from_dict(opp) for opp in result]
 
 	async def create_opportunity(self, payload: dict, parse: bool = False, perform_as_posting_owner: bool = False):
 		params = {'perform_as': self.lever_adapter.automation_user_id}
